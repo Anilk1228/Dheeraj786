@@ -1,10 +1,13 @@
+# Use Python Alpine
 FROM python:3.12-alpine3.20
 
+# Set working directory
 WORKDIR /app
 
+# Copy project files
 COPY . .
 
-# System deps
+# Install system dependencies
 RUN apk add --no-cache \
     gcc \
     libffi-dev \
@@ -14,11 +17,9 @@ RUN apk add --no-cache \
     make \
     g++ \
     cmake \
-    bash \
-    wget \
-    unzip
+    py3-setuptools
 
-# Bento4 install
+# Install Bento4 (your original logic kept)
 RUN wget -q https://github.com/axiomatic-systems/Bento4/archive/v1.6.0-639.zip && \
     unzip v1.6.0-639.zip && \
     cd Bento4-1.6.0-639 && \
@@ -30,11 +31,14 @@ RUN wget -q https://github.com/axiomatic-systems/Bento4/archive/v1.6.0-639.zip &
     cd ../.. && \
     rm -rf Bento4-1.6.0-639 v1.6.0-639.zip
 
-# 🔥 Python deps (FIX pkg_resources issue)
+# 🔥 IMPORTANT FIX (this solves pkg_resources error)
 RUN python3 -m ensurepip && \
-    pip3 install --upgrade pip setuptools wheel && \
-    pip3 install --no-cache-dir -r sainibots.txt && \
-    pip3 install yt-dlp
+    python3 -m pip install --upgrade pip setuptools wheel && \
+    python3 -m pip install --no-cache-dir -r sainibots.txt && \
+    python3 -m pip install yt-dlp
 
-# 🚀 Run bot + web
-CMD ["bash", "-c", "python3 modules/main.py & gunicorn app:app --bind 0.0.0.0:$PORT"]
+# Expose port (Render uses this)
+ENV PORT=8000
+
+# ✅ Run BOTH bot + web properly
+CMD ["sh", "-c", "python3 modules/main.py & exec gunicorn app:app --bind 0.0.0.0:$PORT"]
