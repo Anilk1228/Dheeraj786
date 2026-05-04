@@ -1,32 +1,28 @@
-import os, sys, asyncio, requests
-from pyromod import listen
-from pyrogram import Client, filters
+import os, asyncio
+from pyrogram import Client, filters, idle
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
-from flask import Flask
-from threading import Thread
 
 # Variable Imports
 from vars import API_ID, API_HASH, BOT_TOKEN, OWNER, TOTAL_USERS
 import globals
 
-# --- KEEP ALIVE SERVER (For Render Free Tier) ---
+# 🔥 Flask app (ONLY for gunicorn, no thread)
+from flask import Flask
 app = Flask(__name__)
+
 @app.route('/')
-def home(): return "Dheeraj Giri Uploader is Online!"
+def home():
+    return "Dheeraj Giri Uploader is Online!"
 
-def run_flask():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+# 🔥 Bot setup
+bot = Client(
+    "bot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
 
-def keep_alive():
-    t = Thread(target=run_flask)
-    t.daemon = True
-    t.start()
-# -----------------------------------------------
-
-bot = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-
-# --- CLASSY INTERFACE BUTTONS ---
+# --- UI BUTTONS ---
 main_buttons = InlineKeyboardMarkup([
     [
         InlineKeyboardButton("🎙️ Commands", callback_data="all_commands"),
@@ -41,9 +37,9 @@ main_buttons = InlineKeyboardMarkup([
     ]
 ])
 
+# --- START COMMAND ---
 @bot.on_message(filters.command("start"))
 async def start(bot, m: Message):
-    # Aapka New Classy Welcome Message
     caption = (
         f"👑 **Welcome, {m.from_user.first_name}!**\n\n"
         f"You are now using the official uploader bot of\n"
@@ -53,18 +49,17 @@ async def start(bot, m: Message):
         f"━━━━━━━━━━━━━━━━━━━━\n"
         f"**Official Brand:** `@DheerajGiri_Bots` 🦁"
     )
-    
-    # Aapka Final DG Logo Direct Link
+
     logo_wallpaper = "https://i.ibb.co/XQZ1r1n/1000479523.jpg"
-    
+
     await bot.send_photo(
         chat_id=m.chat.id,
-        photo=logo_wallpaper, 
+        photo=logo_wallpaper,
         caption=caption,
         reply_markup=main_buttons
     )
 
-# --- REGISTER ALL HANDLERS ---
+# --- REGISTER HANDLERS ---
 from text_handler import register_text_handlers
 from youtube_handler import register_youtube_handlers
 from commands import register_commands_handlers
@@ -73,7 +68,12 @@ register_text_handlers(bot)
 register_youtube_handlers(bot)
 register_commands_handlers(bot)
 
+# 🔥 MAIN ASYNC START
+async def main():
+    await bot.start()
+    print("🚀 Bot Started Successfully")
+    await idle()
+
+# 🔥 ENTRY POINT
 if __name__ == "__main__":
-    keep_alive() 
-    print("🚀 Dheeraj Giri Bot is LIVE with Final Branding!")
-    bot.run()
+    asyncio.run(main())
