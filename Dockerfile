@@ -1,13 +1,10 @@
-# Use a Python 3.12.3 Alpine base image
 FROM python:3.12-alpine3.20
 
-# Set the working directory
 WORKDIR /app
 
-# Copy all files from the current directory to the container's /app directory
 COPY . .
 
-# Install necessary dependencies
+# System deps
 RUN apk add --no-cache \
     gcc \
     libffi-dev \
@@ -16,23 +13,28 @@ RUN apk add --no-cache \
     aria2 \
     make \
     g++ \
-    cmake && \
-    wget -q https://github.com/axiomatic-systems/Bento4/archive/v1.6.0-639.zip && \
+    cmake \
+    bash \
+    wget \
+    unzip
+
+# Bento4 install
+RUN wget -q https://github.com/axiomatic-systems/Bento4/archive/v1.6.0-639.zip && \
     unzip v1.6.0-639.zip && \
     cd Bento4-1.6.0-639 && \
     mkdir build && \
     cd build && \
     cmake .. && \
     make -j$(nproc) && \
-    cp mp4decrypt /usr/local/bin/ &&\
+    cp mp4decrypt /usr/local/bin/ && \
     cd ../.. && \
     rm -rf Bento4-1.6.0-639 v1.6.0-639.zip
 
-# Install Python dependencies
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
+# 🔥 Python deps (FIX pkg_resources issue)
+RUN python3 -m ensurepip && \
+    pip3 install --upgrade pip setuptools wheel && \
     pip3 install --no-cache-dir -r sainibots.txt && \
-    pip3 install -U yt-dlp
+    pip3 install yt-dlp
 
-# Set the command to run the application
-CMD ["sh", "-c", "gunicorn app:app & python3 modules/main.py"]
-
+# 🚀 Run bot + web
+CMD ["bash", "-c", "python3 modules/main.py & gunicorn app:app --bind 0.0.0.0:$PORT"]
