@@ -31,9 +31,10 @@ RUN wget -q https://github.com/axiomatic-systems/Bento4/archive/v1.6.0-639.zip &
     cd ../.. && \
     rm -rf Bento4-1.6.0-639 v1.6.0-639.zip
 
-# 🔥 IMPORTANT FIX (this solves pkg_resources error)
-RUN python3 -m ensurepip && \
-    python3 -m pip install --upgrade pip setuptools wheel && \
+# FIX pkg_resources issue permanently
+RUN apk add --no-cache py3-setuptools && \
+    python3 -m ensurepip && \
+    python3 -m pip install --upgrade pip && \
     python3 -m pip install --no-cache-dir -r sainibots.txt && \
     python3 -m pip install yt-dlp
 
