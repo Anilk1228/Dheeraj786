@@ -30,8 +30,7 @@ RUN apk add --no-cache \
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir --upgrade pip \
-    && pip3 install setuptools
-    && python3 -m ensurepip && \
+    && pip3 install setuptools \
     && pip3 install --upgrade pip setuptools wheel && \
     && pip3 install --no-cache-dir --upgrade -r sainibots.txt \
     && python3 -m pip install -U yt-dlp
